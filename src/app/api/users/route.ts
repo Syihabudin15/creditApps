@@ -1,6 +1,10 @@
 import prisma from "@/components/Prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { CreateUser, FindUser } from "@/components/services/UserService";
+import {
+  CreateUser,
+  DeleteUser,
+  FindUser,
+} from "@/components/services/UserService";
 import { CreateMenu } from "@/components/services/MenuService";
 import { IUser } from "@/components/IInterfaces";
 import { GetProps, getQueryUrl } from "@/components/utils/ServerUtils";
@@ -42,4 +46,19 @@ export const POST = async (req: NextRequest) => {
       { status: 500 }
     );
   }
+};
+
+export const DELETE = async (req: NextRequest) => {
+  const id = req.nextUrl.searchParams.get("id");
+  if (!id) {
+    return NextResponse.json(
+      { msg: "Invalid ID. Mohon masukan id user yang valid!", status: 404 },
+      { status: 404 }
+    );
+  }
+  await DeleteUser(id);
+  return NextResponse.json(
+    { msg: "Data User berhasil dihapus", status: 200 },
+    { status: 200 }
+  );
 };

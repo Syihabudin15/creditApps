@@ -153,7 +153,7 @@ export default function LayoutUser({
           />
           <div className="my-2 p-2">
             <div className="w-[100px]">
-              <Link href={"/auth"}>
+              <Link href={"#"} onClick={() => setLogout(true)}>
                 <div className="p-2 text-gray-50 rounded shadow bg-red-500 text-xs hover:bg-red-600">
                   <span>Sign out</span> <LogoutOutlined />
                 </div>
@@ -291,7 +291,7 @@ export const menus: IMenuList[] = [
       {
         title: "Jenis Biaya",
         label: "Jenis Biaya",
-        key: "/auths/masters/type",
+        key: "/auths/masters/jepem",
         icon: <BookFilled />,
         access: [],
         checked: false,

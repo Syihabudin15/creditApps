@@ -7,6 +7,14 @@ export interface IServiceResponse<T> {
   data?: T;
 }
 
+export interface FindAllProps {
+  page: number;
+  pageSize: number;
+  filters?: any;
+  includes?: any;
+  orderBy?: string;
+}
+
 export interface ICardDashboard {
   name: string;
   icon: string | React.ReactNode;
@@ -31,6 +39,13 @@ export interface IUser extends User {
 
 export interface IProPem extends ProPem {}
 export interface IJePem extends JePem {}
+export interface ISimulation extends Dapem {
+  nama: string;
+  nik: string;
+  alamat: string;
+  ProPem: IProPem;
+  JePem: IJePem;
+}
 export interface IDapem extends Dapem {
   ProPem: IProPem;
   JePem: IJePem;

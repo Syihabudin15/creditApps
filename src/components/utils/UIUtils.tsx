@@ -2,8 +2,9 @@
 
 import { FileOutlined, PrinterOutlined } from "@ant-design/icons";
 import { Button, Modal } from "antd";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { UIAkad } from "./AkadUtils";
+import { ModalMessageProps } from "./ServerUtils";
 
 export const ViewArchive = ({ title, src }: { title: string; src: string }) => {
   const [open, setOpen] = useState(false);
@@ -32,6 +33,38 @@ export const ViewArchive = ({ title, src }: { title: string; src: string }) => {
         </div>
       </Modal>
     </div>
+  );
+};
+
+export const NotificationModal = ({
+  data,
+  setData,
+}: {
+  data: ModalMessageProps;
+  setData: Function;
+}) => {
+  return (
+    <Modal
+      title={
+        <p
+          className={`font-bold text-xl ${
+            data.type === "error" ? "text-red-500" : "text-green-500"
+          }`}
+        >
+          {data.title}
+        </p>
+      }
+      open={data.show}
+      onCancel={() =>
+        setData((prev: ModalMessageProps) => ({ ...prev, show: false }))
+      }
+      onClose={() =>
+        setData((prev: ModalMessageProps) => ({ ...prev, show: false }))
+      }
+      footer={[]}
+    >
+      {data.desc}
+    </Modal>
   );
 };
 

@@ -376,7 +376,7 @@ export const TableMonitoring = () => {
             plafond += pd.plafond;
           });
           return (
-            <Table.Summary.Row className="bg-green-500 text-white text-center">
+            <Table.Summary.Row className="bg-green-500 text-white text-center text-xs">
               <Table.Summary.Cell index={1} className="text-center">
                 Summary
                 <></>
@@ -396,6 +396,7 @@ export const TableMonitoring = () => {
               <Table.Summary.Cell index={12}></Table.Summary.Cell>
               <Table.Summary.Cell index={13}></Table.Summary.Cell>
               <Table.Summary.Cell index={14}></Table.Summary.Cell>
+              <Table.Summary.Cell index={15}></Table.Summary.Cell>
             </Table.Summary.Row>
           );
         }}

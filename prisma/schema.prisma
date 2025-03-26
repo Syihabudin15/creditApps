@@ -18,6 +18,28 @@ enum ERole {
   MARKETING
 }
 
+enum Estatus {
+  SAVED
+  ANTRI
+  PENDING
+  PROSES
+  BATAL
+  SELESAI
+}
+
+enum EStatusKawin {
+  BELUMKAWIN
+  KAWIN
+  JANDA
+  DUDA
+}
+
+enum EStatusDebitur {
+  LANCAR
+  MACET
+  BLACKLIST
+}
+
 model User {
   id           String  @id @default(uuid())
   namaLengkap  String
@@ -38,8 +60,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
-  UserMenu UserMenu[]
-  Dapem    Dapem[]
+  UserMenu    UserMenu[]
+  Dapem       Dapem[]
+  DetailDapem DetailDapem[]
 }
 
 model UserMenu {
@@ -55,7 +78,6 @@ model ProPem {
   name          String
   maxTenor      Int
   maxPlafon     Int
-  maxAngsuran   Float
   byAdmin       Float
   byTabungan    Float
   byMaterai     Float
@@ -83,9 +105,6 @@ model JePem {
 model Dapem {
   id            String   @id @default(uuid())
   tanggal       DateTime @default(now())
-  nik           String
-  namaPemohon   String
-  alamat        String
   gajiBersih    Int
   tenor         Int
   plafon        Int
@@ -103,10 +122,73 @@ model Dapem {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
-  ProPem   ProPem @relation(fields: [proPemId], references: [id])
-  Jepem    JePem  @relation(fields: [jePemId], references: [id])
-  User     User   @relation(fields: [userId], references: [id])
-  proPemId String
-  jePemId  String
-  userId   String
+  ProPem        ProPem       @relation(fields: [proPemId], references: [id])
+  Jepem         JePem        @relation(fields: [jePemId], references: [id])
+  User          User         @relation(fields: [userId], references: [id])
+  proPemId      String
+  jePemId       String
+  userId        String
+  DetailDapem   DetailDapem? @relation(fields: [detailDapemId], references: [id])
+  detailDapemId String?
+}
+
+model DetailDapem {
+  id                String    @id @default(uuid())
+  berkasPengajuan   String?
+  videoWawancara    String?
+  status            Estatus   @default(SAVED)
+  tanggalStatus     DateTime
+  keterangan        String    @db.Text
+  statusCair        Estatus   @default(ANTRI)
+  tanggalCair       DateTime?
+  noAkad            String?   @unique
+  tanggalAkad       DateTime?
+  berkasAkad        String?
+  buktiPencairan    String?
+  nominalPencairan  Int?
+  buktiPencairan1   String?
+  nominalPencairan1 Int?
+  buktiPencairan2   String?
+  nominalPencairan2 Int?
+  fee               Int?
+  buktiFee          String?
+  tujuanPenggunaan  String?
+
+  isSave        Boolean     @default(true)
+  User          User        @relation(fields: [userId], references: [id])
+  userId        String
+  Dapem         Dapem[]
+  DataDebitur   DataDebitur @relation(fields: [dataDebiturId], references: [id])
+  dataDebiturId String
+}
+
+model DataDebitur {
+  id           String         @id @default(uuid())
+  nama         String
+  nik          String
+  noKK         String
+  tanggalLahir DateTime
+  alamat       String
+  kelurahan    String
+  kecamatan    String
+  kota         String
+  provinsi     String
+  kodePos      String
+  geoLokasi    String
+  noTelepon    String
+  gender       EGender
+  statusKawin  EStatusKawin
+  DetailDapem  DetailDapem[]
+  DataKeluarga DataKeluarga[]
+}
+
+model DataKeluarga {
+  id            String      @id @default(uuid())
+  nama          String
+  noTelepon     String
+  hubungan      String
+  alamat        String
+  gender        EGender
+  DataDebitur   DataDebitur @relation(fields: [dataDebiturId], references: [id])
+  dataDebiturId String
 }

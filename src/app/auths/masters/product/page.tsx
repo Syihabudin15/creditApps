@@ -1,14 +1,14 @@
-import { UISubmission } from "@/components/submissions";
+import { UIProduct } from "@/components/master";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Submission",
+  title: "Produk Pembiayaan",
 };
 
 export default function Page() {
   return (
     <div>
-      <UISubmission />
+      <UIProduct />
     </div>
   );
 }

@@ -10,25 +10,25 @@ export const IDRFormat = (number: number) => {
   return temp;
 };
 
-export const AngsuranAnuitas = (
-  plafond: number,
-  tenor: number,
-  bunga: number,
-  unit: number
-) => {
-  const r = bunga / (365 / unit) / 100;
+// export const AngsuranAnuitas = (
+//   plafond: number,
+//   tenor: number,
+//   bunga: number,
+//   unit: number
+// ) => {
+//   const r = bunga / (365 / unit) / 100;
 
-  const angsuran =
-    (plafond * (r * Math.pow(1 + r, tenor))) / (Math.pow(1 + r, tenor) - 1);
-  const pokok = plafond / tenor;
-  const margin = angsuran - pokok;
+//   const angsuran =
+//     (plafond * (r * Math.pow(1 + r, tenor))) / (Math.pow(1 + r, tenor) - 1);
+//   const pokok = plafond / tenor;
+//   const margin = angsuran - pokok;
 
-  return {
-    angsuran: Math.ceil(angsuran / rounded) * rounded,
-    pokok,
-    margin,
-  };
-};
+//   return {
+//     angsuran: Math.ceil(angsuran / rounded) * rounded,
+//     pokok,
+//     margin,
+//   };
+// };
 
 export const AngsuranFlat = (
   plafond: number,
@@ -36,16 +36,14 @@ export const AngsuranFlat = (
   bunga: number,
   unit: number
 ) => {
-  const r = bunga / (365 / unit) / 100;
+  const r = Math.ceil(bunga / (365 / unit) / 100 / 0.001) * 0.001;
 
-  const angsuran = parseInt(
-    ((plafond + plafond * r * tenor) / tenor).toFixed(0)
-  );
-  const pokok = parseInt((plafond / tenor).toFixed(0));
-  const margin = parseInt((angsuran - pokok).toFixed(0));
+  const pokok = parseInt((plafond / tenor).toString());
+  const margin = parseInt((plafond * r).toString());
+  const angsuran = Math.ceil((pokok + margin) / rounded) * rounded;
 
   return {
-    angsuran: Math.ceil(angsuran / rounded) * rounded,
+    angsuran: angsuran,
     pokok,
     margin,
   };

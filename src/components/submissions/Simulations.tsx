@@ -3,13 +3,14 @@ import { Button, Input, Modal, Select } from "antd";
 import moment from "moment";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { IDapem, IJePem, IProPem, IUser } from "../IInterfaces";
+import { IDapem, IJePem, IProPem, ISimulation, IUser } from "../IInterfaces";
 import {
   AngsuranFlat,
   GetStartPaidDate,
   IDRFormat,
 } from "../utils/FunctionUtils";
 import { useUser } from "../contexts/UserContext";
+import { ProPem } from "@prisma/client";
 
 export const UI = () => {
   const [error, setError] = useState<{ status: boolean; msg: string }>({
@@ -25,11 +26,11 @@ export const UI = () => {
   >([]);
   const [products, setProducts] = useState<IProPem[]>([]);
   const [jepems, setJepems] = useState<IJePem[]>([]);
-  const [data, setData] = useState<IDapem>({
+  const [data, setData] = useState<ISimulation>({
     id: "",
     tanggal: new Date(),
     nik: "",
-    namaPemohon: "",
+    nama: "",
     alamat: "",
     gajiBersih: 0,
     tenor: 0,
@@ -55,7 +56,6 @@ export const UI = () => {
       unit: 0,
       maxTenor: 0,
       maxPlafon: 0,
-      maxAngsuran: 0,
       byAdmin: 0,
       byTabungan: 0,
       byMaterai: 0,
@@ -73,6 +73,7 @@ export const UI = () => {
       updatedAt: new Date(),
       isActive: true,
     },
+    detailDapemId: "",
   });
   const [totalPot, setTotalPot] = useState<number>(0);
 
@@ -113,18 +114,27 @@ export const UI = () => {
     }
   }, [data.ProPem.maxPlafon, data.ProPem.maxTenor]);
 
-  // Lifecycle Products Option
+  // Lifecycle Options
   useEffect(() => {
-    const daily = propem.filter((p) => p.unit === 1);
-    const weekly = propem.filter((p) => p.unit === 7);
-    const monthly = propem.filter((p) => p.unit === 30);
-    setProductsOption([
-      { label: "Daily", options: daily },
-      { label: "Weekly", options: weekly },
-      { label: "Monthly", options: monthly },
-    ]);
-    setProducts([...daily, ...weekly, ...monthly]);
-    setJepems(jePem);
+    (async () => {
+      const resPropem = await fetch("/api/products");
+      const dataProduk = await resPropem.json();
+      const resJepem = await fetch("/api/jepem");
+      const dataJepem = await resJepem.json();
+
+      const daily = (dataProduk.data as ProPem[]).filter((p) => p.unit === 1);
+      const weekly = (dataProduk.data as ProPem[]).filter((p) => p.unit === 7);
+      const monthly = (dataProduk.data as ProPem[]).filter(
+        (p) => p.unit === 30
+      );
+      setProductsOption([
+        { label: "Daily", options: daily },
+        { label: "Weekly", options: weekly },
+        { label: "Monthly", options: monthly },
+      ]);
+      setProducts([...daily, ...weekly, ...monthly]);
+      setJepems(dataJepem.data);
+    })();
   }, []);
 
   return (
@@ -151,9 +161,9 @@ export const UI = () => {
             <Input
               placeholder="Nama Pemohon"
               required
-              value={data.namaPemohon}
+              value={data.nama}
               onChange={(e) =>
-                setData((prev) => ({ ...prev, namaPemohon: e.target.value }))
+                setData((prev) => ({ ...prev, nama: e.target.value }))
               }
             />
           </div>
@@ -684,7 +694,7 @@ export const UI = () => {
             />
           </div>
         </div>
-        {/* <div className="flex items-center border-b py-1 ">
+        <div className="flex items-center border-b py-1 ">
           <div className="flex-1">
             <p>Tanggal Mulai Angsuran</p>
           </div>
@@ -721,7 +731,7 @@ export const UI = () => {
               }
             />
           </div>
-        </div> */}
+        </div>
         <div className="text-xs text-red-500 italic my-2">
           {error.status && error.msg}
         </div>
@@ -744,7 +754,7 @@ const SimulationModal = ({
   potongan,
   user,
 }: {
-  data: IDapem;
+  data: ISimulation;
   potongan: number;
   user: IUser | undefined;
 }) => {
@@ -798,7 +808,7 @@ const SimulationModal = ({
             </div>
             <div className="flex justify-between border-b my-2 gap-2">
               <p>Nama Pemohon</p>
-              <p className="text-right">{data.namaPemohon}</p>
+              <p className="text-right">{data.nama}</p>
             </div>
             <div className="flex justify-between border-b my-2 gap-2">
               <p>Alamat</p>
@@ -1001,74 +1011,3 @@ const handleReset = ({
   });
   setTotalPot(0);
 };
-
-const propem: IProPem[] = [
-  {
-    id: "harian",
-    name: "Harian",
-    maxTenor: 30,
-    maxPlafon: 2000000,
-    maxAngsuran: 80,
-    byAdmin: 5,
-    byTabungan: 5,
-    byMaterai: 0,
-    byTatalaksana: 0,
-    unit: 1,
-    margin: 20,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    isActive: true,
-  },
-
-  {
-    id: "mingguan",
-    name: "Mingguan",
-    maxTenor: 10,
-    maxPlafon: 10000000,
-    maxAngsuran: 80,
-    byAdmin: 5,
-    byTabungan: 5,
-    byMaterai: 0,
-    byTatalaksana: 0,
-    unit: 7,
-    margin: 20,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    isActive: true,
-  },
-  {
-    id: "bulanan",
-    name: "Bulanan",
-    maxTenor: 60,
-    maxPlafon: 50000000,
-    maxAngsuran: 80,
-    byAdmin: 5,
-    byTabungan: 5,
-    byMaterai: 1,
-    byTatalaksana: 2,
-    unit: 30,
-    margin: 20,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    isActive: true,
-  },
-];
-
-const jePem: IJePem[] = [
-  {
-    id: "1",
-    name: "Baru",
-    penalty: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    isActive: true,
-  },
-  {
-    id: "2",
-    name: "Rehab",
-    penalty: 2,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    isActive: true,
-  },
-];

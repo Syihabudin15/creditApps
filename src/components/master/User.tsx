@@ -1,5 +1,5 @@
 "use client";
-import { PlusCircleFilled } from "@ant-design/icons";
+import { DeleteFilled, PlusCircleFilled } from "@ant-design/icons";
 import {
   Button,
   Checkbox,
@@ -18,11 +18,18 @@ import { menus } from "../layouts/LayoutUser";
 import { ModalMessageProps } from "../utils/ServerUtils";
 import { User, UserMenu as UMenu } from "@prisma/client";
 import moment from "moment";
+import { NotificationModal } from "../utils";
 
 export const DataKaryawan = () => {
   const [data, setData] = useState<IUser[]>();
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState<string>();
+  const [notifModal, setNotifModal] = useState<ModalMessageProps>({
+    show: false,
+    type: "error",
+    title: "",
+    desc: "",
+  });
 
   const columns: TableProps<IUser>["columns"] = [
     {
@@ -154,6 +161,24 @@ export const DataKaryawan = () => {
       },
     },
     {
+      title: "LAST UPDATE",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
+      className: "text-xs text-center",
+      width: 120,
+      onHeaderCell: () => {
+        return {
+          ["style"]: {
+            textAlign: "center",
+            fontSize: 12,
+          },
+        };
+      },
+      render(value, record, index) {
+        return <div>{moment(value).format("DD/MM/YYYY")}</div>;
+      },
+    },
+    {
       title: "STATUS",
       dataIndex: "isActive",
       key: "isActive",
@@ -179,6 +204,32 @@ export const DataKaryawan = () => {
         );
       },
     },
+    {
+      title: "AKSI",
+      dataIndex: "aksi",
+      key: "aksi",
+      className: "text-xs",
+      width: 100,
+      onHeaderCell: () => {
+        return {
+          ["style"]: {
+            textAlign: "center",
+            fontSize: 12,
+          },
+        };
+      },
+      render(value, record, index) {
+        return (
+          <div className="flex justify-center gap-2">
+            <DeleteUser
+              data={record}
+              getUser={getData}
+              setNotif={setNotifModal}
+            />
+          </div>
+        );
+      },
+    },
   ];
 
   const getData = async (search?: string) => {
@@ -199,12 +250,9 @@ export const DataKaryawan = () => {
   useEffect(() => {
     let timeout: any;
     (async () => {
-      if (search) {
-        timeout = setTimeout(async () => {
-          await getData(search);
-        }, 500);
-      }
-      await getData();
+      timeout = setTimeout(async () => {
+        await getData(search);
+      }, 200);
     })();
     return () => clearTimeout(timeout);
   }, [search]);
@@ -231,7 +279,7 @@ export const DataKaryawan = () => {
               </div>
               <div className="py-1 flex flex-col sm:flex-row gap-2 justify-between sm:items-end">
                 <div className="flex-1 flex items-end gap-2 flex-wrap">
-                  <CreateUser getData={getData} />
+                  <CreateUser getData={getData} setMessage={setNotifModal} />
                 </div>
                 <div className="flex-2">
                   <Input.Search
@@ -245,18 +293,19 @@ export const DataKaryawan = () => {
           )}
         />
       </div>
+      <NotificationModal data={notifModal} setData={setNotifModal} />
     </div>
   );
 };
 
-const CreateUser = ({ getData }: { getData: Function }) => {
+const CreateUser = ({
+  getData,
+  setMessage,
+}: {
+  getData: Function;
+  setMessage: Function;
+}) => {
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState<ModalMessageProps>({
-    show: false,
-    title: "",
-    desc: "",
-    type: "error",
-  });
   const [loading, setLoading] = useState(false);
   const [personal, setPersonal] = useState<User>();
   const [userMenu, setUserMenu] = useState<IMenuList[]>();
@@ -404,33 +453,6 @@ const CreateUser = ({ getData }: { getData: Function }) => {
           </Form.Item>
         </Form>
       </Modal>
-      {message.show && (
-        <Modal
-          title={
-            <span
-              className={`${
-                message.type === "error" ? "text-red-500" : "text-green-500"
-              }`}
-            >
-              {message.title}
-            </span>
-          }
-          footer={[]}
-          onCancel={() =>
-            setMessage((prev: ModalMessageProps) => {
-              return { ...prev, show: false };
-            })
-          }
-          onClose={() =>
-            setMessage((prev) => {
-              return { ...prev, show: false };
-            })
-          }
-          open={message.show}
-        >
-          {message.desc}
-        </Modal>
-      )}
     </div>
   );
 };
@@ -885,6 +907,75 @@ const AccessChildUtils = ({
             </div>
           </div>
         ))}
+    </div>
+  );
+};
+
+export const DeleteUser = ({
+  data,
+  getUser,
+  setNotif,
+}: {
+  data: IUser;
+  getUser: Function;
+  setNotif: Function;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const handleDelete = async () => {
+    setLoading(true);
+    const res = await fetch("/api/users?id=" + data.id);
+    const result = await res.json();
+    if (!res.ok) {
+      return setNotif({
+        type: "error",
+        show: true,
+        title: "ERROR",
+        desc: result.msg,
+      });
+    }
+    setNotif({
+      type: "success",
+      show: true,
+      title: "BERHASIL",
+      desc: result.msg,
+    });
+    await getUser();
+    setLoading(false);
+  };
+
+  return (
+    <div>
+      <Button
+        icon={<DeleteFilled />}
+        size="small"
+        danger
+        onClick={() => setOpen(true)}
+        loading={loading}
+        disabled={loading}
+      ></Button>
+      <Modal
+        open={open}
+        title={"Hapus Data " + data.namaLengkap.toUpperCase()}
+        onCancel={() => setOpen(false)}
+        onClose={() => setOpen(false)}
+        footer={[
+          <Button
+            key={"hapus"}
+            onClick={() => handleDelete()}
+            type="primary"
+            loading={loading}
+            disabled={loading}
+          >
+            Submit
+          </Button>,
+        ]}
+      >
+        <p>
+          Lanjutkan untuk menghapus produk{" "}
+          <span className="font-bold">{data.namaLengkap.toUpperCase()}</span>?
+        </p>
+      </Modal>
     </div>
   );
 };
