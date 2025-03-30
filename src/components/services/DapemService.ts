@@ -12,7 +12,7 @@ export const CreateDapem = async (
   //     msg: "Username, email atau no telepon sudah digunakan",
   //   };
 
-  return { code: 201, msg: "Success", data: dapem };
+  return { status: 201, msg: "Success", data: dapem };
 };
 
 export const FindUser = async (

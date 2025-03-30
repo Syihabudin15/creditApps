@@ -3,6 +3,7 @@ import { Button, DatePicker, Input, Table, TableProps, Tooltip } from "antd";
 import moment from "moment";
 import { IDRFormat } from "../utils/FunctionUtils";
 import { CheckCircleFilled, DeleteFilled } from "@ant-design/icons";
+import { CreateOrUpdate } from "./index";
 const { RangePicker } = DatePicker;
 
 export const UI = () => {
@@ -159,6 +160,9 @@ export const TableSubmission = () => {
       render(value, record, index) {
         return (
           <div className="flex justify-center gap-2">
+            <Tooltip title="Update">
+              <CreateOrUpdate currData={"update"} />
+            </Tooltip>
             <Tooltip title="Ajukan">
               <Button
                 icon={<CheckCircleFilled />}
@@ -194,6 +198,7 @@ export const TableSubmission = () => {
             </div>
             <div className="py-1 flex flex-col sm:flex-row gap-2 justify-between sm:items-end">
               <div className="flex-1 flex items-end gap-2 flex-wrap">
+                <CreateOrUpdate />
                 <RangePicker size="small" />
               </div>
               <div className="flex-2">

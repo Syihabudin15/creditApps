@@ -7,14 +7,14 @@ export const CreateMenu = async (
   userId: string
 ): Promise<IServiceResponse<UserMenu[]>> => {
   const find = await prisma.user.findFirst({ where: { id: userId } });
-  if (!find) return { code: 400, msg: "User tidak ditemukan" };
+  if (!find) return { status: 400, msg: "User tidak ditemukan" };
 
   await prisma.userMenu.createMany({
     data: userMenu.map((um) => {
       return { path: um.path, access: um.access, userId: userId };
     }),
   });
-  return { code: 201, msg: "Success", data: userMenu };
+  return { status: 201, msg: "Success", data: userMenu };
 };
 
 export const UpdateMenu = async (userMenu: UserMenu[], userId: string) => {
@@ -23,8 +23,10 @@ export const UpdateMenu = async (userMenu: UserMenu[], userId: string) => {
   await prisma.userMenu.deleteMany({
     where: { userId: userId },
   });
-  const newData = userMenu.map((um) => {
-    return { ...um, userId: userId };
+  const result = await prisma.userMenu.createMany({
+    data: userMenu.map((um) => {
+      return { path: um.path, access: um.access, userId: userId };
+    }),
   });
-  return await prisma.userMenu.createMany({ data: newData });
+  return result;
 };

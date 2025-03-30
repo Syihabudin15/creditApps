@@ -122,7 +122,7 @@ export const TableProPem = () => {
       title: "MATERAI",
       dataIndex: "byMaterai",
       key: "byMaterai",
-      className: "text-xs text-center",
+      className: "text-xs text-right",
       width: 100,
       onHeaderCell: () => {
         return {
@@ -137,7 +137,7 @@ export const TableProPem = () => {
       title: "TATALAKSANA",
       dataIndex: "byTatalaksana",
       key: "byTatalaksana",
-      className: "text-xs text-center",
+      className: "text-xs text-right",
       width: 100,
       onHeaderCell: () => {
         return {
@@ -219,11 +219,11 @@ export const TableProPem = () => {
         return (
           <div className="flex justify-center gap-2">
             <Tooltip title="EDIT">
-              <Button
-                icon={<FormOutlined />}
-                size="small"
-                type="primary"
-              ></Button>
+              <CreateOrUpdateProduct
+                getProduct={getProduct}
+                setNotif={setNotifModal}
+                currData={record}
+              />
             </Tooltip>
             <Tooltip title="Hapus">
               <DeleteProduct
@@ -296,7 +296,7 @@ export const TableProPem = () => {
             </div>
             <div className="py-1 flex flex-col sm:flex-row gap-2 justify-between sm:items-end">
               <div>
-                <CreateProduct
+                <CreateOrUpdateProduct
                   getProduct={getProduct}
                   setNotif={setNotifModal}
                 />
@@ -317,12 +317,14 @@ export const TableProPem = () => {
   );
 };
 
-const CreateProduct = ({
+const CreateOrUpdateProduct = ({
   getProduct,
   setNotif,
+  currData,
 }: {
   getProduct: Function;
   setNotif: Function;
+  currData?: ProPem;
 }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -345,12 +347,14 @@ const CreateProduct = ({
   const handleSubmit = async () => {
     setLoading(true);
     const res = await fetch("/api/products", {
-      method: "POST",
+      method: currData ? "PUT" : "POST",
       headers: { "Content-type": "Application/json" },
       body: JSON.stringify(data),
     });
     const result = await res.json();
     if (!res.ok) {
+      setOpen(false);
+      setLoading(false);
       return setNotif({
         show: true,
         type: "error",
@@ -369,19 +373,26 @@ const CreateProduct = ({
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (currData) {
+      setData(currData);
+    }
+  }, []);
+
   return (
     <div>
       <Button
         size="small"
-        icon={<PlusCircleFilled />}
+        icon={currData ? <FormOutlined /> : <PlusCircleFilled />}
         type="primary"
         onClick={() => setOpen(true)}
       >
-        New
+        {!currData && "New"}
       </Button>
       <Modal
-        title={"Tambah Produk"}
+        title={`${currData ? "Update" : "Tambah"} Produk`}
         open={open}
+        loading={loading}
         footer={[
           <Button
             key={"submit"}

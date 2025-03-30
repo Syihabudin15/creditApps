@@ -3,7 +3,7 @@ import { Button, Input, Modal, Select } from "antd";
 import moment from "moment";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { IDapem, IJePem, IProPem, ISimulation, IUser } from "../IInterfaces";
+import { IJePem, IProPem, ISimulation, IUser } from "../IInterfaces";
 import {
   AngsuranFlat,
   GetStartPaidDate,

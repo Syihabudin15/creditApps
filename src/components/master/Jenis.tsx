@@ -105,11 +105,11 @@ export const TableJePem = () => {
         return (
           <div className="flex justify-center gap-2">
             <Tooltip title="EDIT">
-              <Button
-                icon={<FormOutlined />}
-                size="small"
-                type="primary"
-              ></Button>
+              <CreateOrUpdateJePem
+                getJePem={getJePem}
+                setNotif={setNotifModal}
+                currData={record}
+              />
             </Tooltip>
             <Tooltip title="Hapus">
               <DeleteJePem
@@ -152,7 +152,7 @@ export const TableJePem = () => {
     (async () => {
       timeout = setTimeout(async () => {
         await getJePem();
-      }, 300);
+      }, 200);
     })();
     return () => clearTimeout(timeout);
   }, [search]);
@@ -182,7 +182,10 @@ export const TableJePem = () => {
             </div>
             <div className="py-1 flex flex-col sm:flex-row gap-2 justify-between sm:items-end">
               <div>
-                <CreateJePem getJePem={getJePem} setNotif={setNotifModal} />
+                <CreateOrUpdateJePem
+                  getJePem={getJePem}
+                  setNotif={setNotifModal}
+                />
               </div>
               <div className="flex-2">
                 <Input.Search
@@ -200,12 +203,14 @@ export const TableJePem = () => {
   );
 };
 
-const CreateJePem = ({
+const CreateOrUpdateJePem = ({
   getJePem,
   setNotif,
+  currData,
 }: {
   getJePem: Function;
   setNotif: Function;
+  currData?: JePem;
 }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -221,12 +226,14 @@ const CreateJePem = ({
   const handleSubmit = async () => {
     setLoading(true);
     const res = await fetch("/api/jepem", {
-      method: "POST",
+      method: currData ? "PUT" : "POST",
       headers: { "Content-type": "Application/json" },
       body: JSON.stringify(data),
     });
     const result = await res.json();
     if (!res.ok) {
+      setOpen(false);
+      setLoading(false);
       return setNotif({
         show: true,
         type: "error",
@@ -245,15 +252,19 @@ const CreateJePem = ({
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (currData) setData(currData);
+  }, []);
+
   return (
     <div>
       <Button
         size="small"
-        icon={<PlusCircleFilled />}
+        icon={currData ? <FormOutlined /> : <PlusCircleFilled />}
         type="primary"
         onClick={() => setOpen(true)}
       >
-        New
+        {!currData && "New"}
       </Button>
       <Modal
         title={"Tambah Jenis Pembiayaan"}
@@ -272,6 +283,7 @@ const CreateJePem = ({
         onCancel={() => setOpen(false)}
         onClose={() => setOpen(false)}
         style={{ top: 20 }}
+        loading={loading}
       >
         <div className="flex flex-col gap-2 my-5">
           <div className="flex gap-2">

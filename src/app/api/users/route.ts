@@ -4,8 +4,9 @@ import {
   CreateUser,
   DeleteUser,
   FindUser,
+  UpdateUser,
 } from "@/components/services/UserService";
-import { CreateMenu } from "@/components/services/MenuService";
+import { CreateMenu, UpdateMenu } from "@/components/services/MenuService";
 import { IUser } from "@/components/IInterfaces";
 import { GetProps, getQueryUrl } from "@/components/utils/ServerUtils";
 
@@ -14,7 +15,12 @@ export const GET = async (req: NextRequest) => {
   const data = await FindUser(
     filter.page,
     filter.pageSize,
-    { namaLengkap: { contains: filter.name } },
+    {
+      OR: [
+        { namaLengkap: { contains: filter.name } },
+        { nip: { contains: filter.name } },
+      ],
+    },
     { UserMenu: true },
     { createdAt: "desc" }
   );
@@ -29,15 +35,42 @@ export const POST = async (req: NextRequest) => {
       await CreateMenu(data.UserMenu, user.data ? user.data.id : "");
       return user;
     });
-    if (trx.code !== 201) {
-      return NextResponse.json({ msg: trx.msg }, { status: trx.code });
+    if (trx.status !== 201) {
+      return NextResponse.json(
+        { msg: trx.msg, status: trx.status },
+        { status: trx.status }
+      );
     }
     return NextResponse.json(
       {
-        msg: "Success",
-        code: trx.code,
+        msg: "Berhasil menambahkan data karyawan baru",
+        status: trx.status,
       },
       { status: 201 }
+    );
+  } catch (err) {
+    console.log(err);
+    return NextResponse.json(
+      { msg: "Username, email atau no telepon sudah digunakan!", code: 500 },
+      { status: 500 }
+    );
+  }
+};
+
+export const PUT = async (req: NextRequest) => {
+  try {
+    const data: IUser = await req.json();
+    const trx = await prisma.$transaction(async (tx) => {
+      const user = await UpdateUser(data);
+      await UpdateMenu(data.UserMenu, data.id);
+      return user;
+    });
+    return NextResponse.json(
+      {
+        msg: trx.msg,
+        status: trx.status,
+      },
+      { status: trx.status }
     );
   } catch (err) {
     console.log(err);

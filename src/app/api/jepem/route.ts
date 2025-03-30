@@ -5,6 +5,7 @@ import {
   CreateJePem,
   DeleteJePem,
   FindJePem,
+  UpdateJePem,
 } from "@/components/services/JenisService";
 
 export const GET = async (req: NextRequest) => {
@@ -24,7 +25,7 @@ export const POST = async (req: NextRequest) => {
     return NextResponse.json(
       {
         msg: jepem.msg,
-        code: jepem.code,
+        code: jepem.status,
       },
       { status: 201 }
     );
@@ -32,6 +33,26 @@ export const POST = async (req: NextRequest) => {
     console.log(err);
     return NextResponse.json(
       { msg: "Internal Server Error", code: 500 },
+      { status: 500 }
+    );
+  }
+};
+
+export const PUT = async (req: NextRequest) => {
+  const data: JePem = await req.json();
+  try {
+    await UpdateJePem(data);
+    return NextResponse.json(
+      {
+        msg: `Data Jenis Pembiayaan ${data.name} Berhasil diUpdate`,
+        status: 200,
+      },
+      { status: 200 }
+    );
+  } catch (err) {
+    console.log(err);
+    return NextResponse.json(
+      { msg: "Internal Server Error", status: 500 },
       { status: 500 }
     );
   }

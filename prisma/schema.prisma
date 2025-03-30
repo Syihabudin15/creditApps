@@ -154,7 +154,6 @@ model DetailDapem {
   buktiFee          String?
   tujuanPenggunaan  String?
 
-  isSave        Boolean     @default(true)
   User          User        @relation(fields: [userId], references: [id])
   userId        String
   Dapem         Dapem[]

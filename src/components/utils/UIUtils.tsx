@@ -1,11 +1,87 @@
 "use client";
 
 import { FileOutlined, PrinterOutlined } from "@ant-design/icons";
-import { Button, Modal } from "antd";
+import { Button, Input, Modal, Select } from "antd";
 import { useState } from "react";
 import { UIAkad } from "./AkadUtils";
 import { ModalMessageProps } from "./ServerUtils";
 
+export const InputUtils = ({
+  type,
+  label,
+  value,
+  onChange,
+  required,
+  options,
+  wLabel,
+  layout,
+  disabled,
+}: {
+  type: "Input" | "Select" | "Area" | "Password" | "Date";
+  label: string;
+  value: any;
+  onChange: Function;
+  required?: boolean;
+  options?: any;
+  wLabel?: number;
+  layout?: "row" | "col";
+  disabled?: boolean;
+}) => (
+  <div
+    className={`flex gap-2 items-${
+      layout && layout === "row" ? "center" : "start"
+    } flex-${layout || "row"}`}
+  >
+    <p className={`w-${wLabel || "44"} flex gap-1`}>
+      {required && <span style={{ fontSize: 10, color: "red" }}>*</span>}
+      <span>{label}</span>
+    </p>
+    <p className={`${layout && layout === "col" && "hidden"}`}>:</p>
+    <div className="w-full">
+      {type === "Input" && (
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled || false}
+        />
+      )}
+      {type === "Select" && (
+        <Select
+          value={value}
+          onChange={(e) => onChange(e)}
+          options={options}
+          defaultValue={value}
+          className="w-full"
+          disabled={disabled || false}
+        />
+      )}
+      {type === "Area" && (
+        <Input.TextArea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled || false}
+        >
+          {value}
+        </Input.TextArea>
+      )}
+      {type === "Password" && (
+        <Input.Password
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled || false}
+        />
+      )}
+      {type === "Date" && (
+        <Input
+          value={value}
+          type="date"
+          onChange={(e) => onChange(new Date(e.target.value))}
+          disabled={disabled || false}
+        />
+      )}
+    </div>
+  </div>
+);
 export const ViewArchive = ({ title, src }: { title: string; src: string }) => {
   const [open, setOpen] = useState(false);
   return (

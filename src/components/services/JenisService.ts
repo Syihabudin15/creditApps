@@ -13,7 +13,7 @@ export const CreateJePem = async (
     },
   });
   return {
-    code: 201,
+    status: 201,
     data: result,
     msg: "Jenis Biaya berhasil ditambahkan",
   };
@@ -50,4 +50,19 @@ export const DeleteJePem = async (id: string) => {
     return find;
   }
   return null;
+};
+
+export const UpdateJePem = async (data: JePem) => {
+  const find = await prisma.jePem.findFirst({ where: { id: data.id } });
+  if (!find)
+    throw new Error("Invalid!. Data Jenis Pembiayaan tidak ditemukan!");
+  await prisma.jePem.update({
+    where: { id: data.id },
+    data: {
+      name: data.name,
+      penalty: data.penalty,
+      updatedAt: new Date(),
+    },
+  });
+  return find;
 };

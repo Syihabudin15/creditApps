@@ -25,7 +25,7 @@ export const CreateUser = async (
   });
   if (find)
     return {
-      code: 400,
+      status: 400,
       msg: "Username, email atau no telepon sudah digunakan",
     };
 
@@ -51,7 +51,7 @@ export const CreateUser = async (
     },
   });
 
-  return { code: 201, msg: "Success", data: save };
+  return { status: 201, msg: "Success", data: save };
 };
 
 export const FindUser = async (
@@ -89,10 +89,34 @@ export const FindByIdUser = async (
 export const UpdateUser = async (user: User) => {
   const find = await FindByIdUser(user.id);
   if (!find) throw Error("User tidak ditemukan");
-  return await prisma.user.update({
+
+  user.password = user.password
+    ? await bcrypt.hash(user.password, 10)
+    : find.password;
+
+  await prisma.user.update({
     where: { id: user.id },
-    data: { ...user, updatedAt: new Date() },
+    data: {
+      namaLengkap: user.namaLengkap,
+      nip: user.nip,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      jenisKelamin: user.jenisKelamin,
+      alamat: user.alamat,
+      kelurahan: user.kelurahan,
+      kecamatan: user.kecamatan,
+      kota: user.kota,
+      provinsi: user.provinsi,
+      password: user.password,
+      updatedAt: new Date(),
+    },
   });
+  return {
+    status: 200,
+    msg: `Update data karyawan ${find.namaLengkap} berhasil`,
+    data: find,
+  };
 };
 
 export const DeleteUser = async (id: string) => {

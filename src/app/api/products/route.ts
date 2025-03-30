@@ -4,6 +4,7 @@ import {
   CreateProduct,
   DeleteProduct,
   FindProduct,
+  UpdateProduct,
 } from "@/components/services/ProductService";
 import { ProPem } from "@prisma/client";
 
@@ -24,7 +25,7 @@ export const POST = async (req: NextRequest) => {
     return NextResponse.json(
       {
         msg: product.msg,
-        code: product.code,
+        code: product.status,
       },
       { status: 201 }
     );
@@ -32,6 +33,26 @@ export const POST = async (req: NextRequest) => {
     console.log(err);
     return NextResponse.json(
       { msg: "Internal Server Error", code: 500 },
+      { status: 500 }
+    );
+  }
+};
+
+export const PUT = async (req: NextRequest) => {
+  const data: ProPem = await req.json();
+  try {
+    await UpdateProduct(data);
+    return NextResponse.json(
+      {
+        msg: `Data Produk Pembiayaan ${data.name} berhasil diUpdate`,
+        status: 200,
+      },
+      { status: 200 }
+    );
+  } catch (err) {
+    console.log(err);
+    return NextResponse.json(
+      { msg: "Internal Server Error", status: 500 },
       { status: 500 }
     );
   }

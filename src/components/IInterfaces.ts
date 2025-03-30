@@ -1,9 +1,18 @@
-import { Dapem, JePem, ProPem, User, UserMenu } from "@prisma/client";
+import {
+  Dapem,
+  DataDebitur,
+  DataKeluarga,
+  DetailDapem,
+  JePem,
+  ProPem,
+  User,
+  UserMenu,
+} from "@prisma/client";
 import React from "react";
 
 export interface IServiceResponse<T> {
   msg: string;
-  code: number;
+  status: number;
   data?: T;
 }
 
@@ -46,7 +55,16 @@ export interface ISimulation extends Dapem {
   ProPem: IProPem;
   JePem: IJePem;
 }
+interface IDataDebitur extends DataDebitur {
+  DataKeluarga: DataKeluarga[];
+}
+interface IDetailDapem extends DetailDapem {
+  DataDebitur: IDataDebitur;
+  User: User;
+}
 export interface IDapem extends Dapem {
   ProPem: IProPem;
   JePem: IJePem;
+  DetailDapem: IDetailDapem;
+  User: User;
 }

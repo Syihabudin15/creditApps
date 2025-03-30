@@ -20,7 +20,7 @@ export const CreateProduct = async (
     },
   });
   return {
-    code: 201,
+    status: 201,
     data: result,
     msg: "Produk berhasil ditambahkan",
   };
@@ -57,4 +57,26 @@ export const DeleteProduct = async (id: string) => {
     return find;
   }
   return null;
+};
+export const UpdateProduct = async (data: ProPem) => {
+  const find = await prisma.proPem.findFirst({ where: { id: data.id } });
+  if (!find) {
+    throw new Error("Produk Pembiayaan tidak ditemukan!");
+  }
+  await prisma.proPem.update({
+    where: { id: data.id },
+    data: {
+      name: data.name,
+      maxTenor: data.maxTenor,
+      maxPlafon: data.maxPlafon,
+      byAdmin: data.byAdmin,
+      byTabungan: data.byTabungan,
+      byTatalaksana: data.byTatalaksana,
+      byMaterai: data.byMaterai,
+      margin: data.margin,
+      unit: data.unit,
+      updatedAt: new Date(),
+    },
+  });
+  return find;
 };
