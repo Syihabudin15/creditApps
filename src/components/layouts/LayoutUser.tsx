@@ -6,15 +6,20 @@ import {
   CalculatorFilled,
   DashboardFilled,
   DesktopOutlined,
+  DiffFilled,
+  FolderFilled,
   FormOutlined,
   LogoutOutlined,
   MenuOutlined,
+  RobotFilled,
+  WalletFilled,
 } from "@ant-design/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { IMenuList } from "../IInterfaces";
+import { IMenuList, NotificationItems } from "../IInterfaces";
 import { ModalMessageProps } from "../utils/ServerUtils";
 import { useUser } from "../contexts/UserContext";
+import { useNotif } from "../contexts/NotificationContext";
 
 export default function LayoutUser({
   children,
@@ -33,6 +38,7 @@ export default function LayoutUser({
     type: "error",
   });
   const user = useUser();
+  const notif = useNotif();
 
   const handleLogout = async () => {
     setLoading(true);
@@ -116,7 +122,9 @@ export default function LayoutUser({
             {process.env.NEXT_PUBLIC_APP_SHORTNAME}
           </div>
           <div className="flex-1 items-center justify-end gap-3 hidden sm:flex me-5 text-xs">
-            <div> NOTIFICATION LIST</div>
+            <div>
+              <NotificationUI data={notif} />
+            </div>
             <Link href={"#"} onClick={() => setLogout(true)}>
               <div className="py-1 px-2 text-gray-50 rounded shadow bg-red-500 text-xs hover:bg-red-600">
                 <span>Logout</span> <LogoutOutlined />
@@ -159,16 +167,8 @@ export default function LayoutUser({
                 </div>
               </Link>
             </div>
-            <div className="text-xs flex gap-2 justify-center flex-wrap my-2">
-              <div>
-                <p>DISIMPAN</p>
-              </div>
-              <div>
-                <p>ANTRIAN</p>
-              </div>
-              <div>
-                <p>APPROVAL</p>
-              </div>
+            <div className="my-2 flex justify-center">
+              <NotificationUI data={notif} />
             </div>
           </div>
         </div>
@@ -222,6 +222,25 @@ export default function LayoutUser({
   );
 }
 
+const NotificationUI = ({ data }: { data: NotificationItems }) => {
+  return (
+    <div className="flex gap-2 items-center text-xs">
+      <div className="border bg-gray-50 flex gap-1 text-black px-2 py-1 rounded shadow-sm">
+        <p>ANTRI</p>
+        <p className="text-red-500 font-bold">{data.antrian}</p>
+      </div>
+      <div className="border bg-gray-50 flex gap-1 text-black px-2 py-1 rounded shadow-sm">
+        <p>AKAD</p>
+        <p className="text-red-500 font-bold">{data.akad}</p>
+      </div>
+      <div className="border bg-gray-50 flex gap-1 text-black px-2 py-1 rounded shadow-sm">
+        <p>CAIR</p>
+        <p className="text-red-500 font-bold">{data.cair}</p>
+      </div>
+    </div>
+  );
+};
+
 export const menus: IMenuList[] = [
   {
     title: "Dashboard",
@@ -271,12 +290,30 @@ export const menus: IMenuList[] = [
     ],
   },
   {
+    title: "Daftar Nominatif",
+    label: "Daftar Nominatif",
+    key: "/auths/nominatif",
+    access: [],
+    checked: false,
+    icon: <WalletFilled />,
+    style: { color: "#fefe" },
+  },
+  {
+    title: "Pemberkasan",
+    label: "Pemberkasan",
+    key: "/auths/berkas",
+    access: [],
+    checked: false,
+    icon: <FolderFilled />,
+    style: { color: "#fefe" },
+  },
+  {
     title: "Developer",
     label: "Developer",
     key: "/auths/masters",
     access: [],
     checked: false,
-    icon: <BookFilled />,
+    icon: <RobotFilled />,
     style: { color: "#fefe" },
     children: [
       {

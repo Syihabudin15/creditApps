@@ -21,7 +21,7 @@ export const FileUpload = ({
   currData,
 }: {
   label: string;
-  fileType: string[];
+  fileType: string;
   onChange: Function;
   currData?: string;
 }) => {
@@ -31,11 +31,9 @@ export const FileUpload = ({
   const [errorMsg, setErrMsg] = useState<string>("");
 
   const beforeUpload = (file: FileType) => {
-    const isJpgOrPng = fileType.filter((ft) => ft === file.type);
-    if (!isJpgOrPng || isJpgOrPng.length === 0) {
-      setErrMsg(
-        `Format file tidak sesuai!. Hanya menerima ${fileType.join("/")}`
-      );
+    const isJpgOrPng = fileType === file.type;
+    if (!isJpgOrPng) {
+      setErrMsg(`Format file tidak sesuai!. Hanya menerima ${fileType}`);
       return false;
     }
     return true;
@@ -43,32 +41,13 @@ export const FileUpload = ({
 
   const handleUpload = async (options: any) => {
     setLoading(true);
-    const { onSuccess, onError, file, onProgress } = options;
-    const base64 = await getBase64(file);
+    const { file } = options;
     try {
-      // const res = await axios.post(
-      //   url,
-      //   {
-      //     file: base64,
-      //     dir: dir,
-      //     ext: currExt,
-      //     id: id,
-      //   },
-      //   {
-      //     headers: { "Content-Type": "Application/json" },
-      //     onUploadProgress: (event: any) => {
-      //       setProgress(1);
-      //       const percent = Math.floor((event.loaded / event.total) * 100);
-      //       setProgress(percent);
-      //       if (percent === 100) {
-      //         setProgress(100);
-      //       }
-      //       onProgress({ percent: (event.loaded / event.total) * 100 });
-      //     },
-      //   }
-      // );
-      // setCurrUrl(res.data.url);
+      const base64 = (await getBase64(file)) as unknown as string;
 
+      setFilename(file.name);
+      setProgress(100);
+      onChange(base64);
       setLoading(false);
     } catch (err) {
       console.log(err);
@@ -79,35 +58,18 @@ export const FileUpload = ({
   };
   const handleDelete = async () => {
     setLoading(true);
-    // const res = await fetch(url, {
-    //   headers: { "Content-Type": "Application/json" },
-    //   method: "DELETE",
-    //   body: JSON.stringify({ id: id, url: currUrl }),
-    // });
-    // if (res.ok) {
-    //   setCurrUrl(undefined);
-    //   setProgress(0);
-    //   setUrl((prev: any) => {
-    //     return {
-    //       ...prev,
-    //       [pathName]: null,
-    //       [`tanggal_${
-    //         pathName === "berkas_akad"
-    //           ? "akad"
-    //           : pathName === "video_penyerahan"
-    //           ? "video_cair"
-    //           : pathName
-    //       }`]: null,
-    //     };
-    //   });
-    // } else {
-    //   message.error(`Gagal hapus berkas!`);
-    // }
+    setFilename("");
+    setProgress(0);
+    onChange(null);
     setLoading(false);
   };
 
   useEffect(() => {
-    if (currData) setFilename(currData);
+    if (currData) {
+      console.log(currData);
+      setFilename((Math.random() * 1000).toString());
+      setProgress(100);
+    }
   }, []);
 
   return (
@@ -119,11 +81,11 @@ export const FileUpload = ({
           <Progress percent={progress} className="w-80" type="line" />
         )}
         {filename ? (
-          <p className="opacity-60">{filename}</p>
+          <p className="opacity-60 w-80">{filename}</p>
         ) : (
           <Upload
             beforeUpload={beforeUpload}
-            accept={fileType.join(", ")}
+            accept={fileType}
             multiple={false}
             showUploadList={false}
             customRequest={(options) => handleUpload(options)}
@@ -132,6 +94,7 @@ export const FileUpload = ({
               size="small"
               className="bg-green-500 hover:bg-green-600"
               type="primary"
+              loading={loading}
             >
               <CloudUploadOutlined />
             </Button>
@@ -144,6 +107,7 @@ export const FileUpload = ({
               danger
               size="small"
               onClick={() => handleDelete()}
+              loading={loading}
             ></Button>
           </div>
         )}

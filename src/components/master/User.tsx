@@ -244,7 +244,6 @@ export const DataKaryawan = () => {
     setLoading(true);
     const res = await fetch(`/api/users${search ? "?name=" + search : ""}`);
     const { data } = await res.json();
-    console.log(data);
     setData(
       data.map((d: IUser) => {
         return {

@@ -1,27 +1,111 @@
 "use client";
-import { DatePicker, Input, Table, TableProps, Typography } from "antd";
+import {
+  DatePicker,
+  Input,
+  Table,
+  TableProps,
+  Tooltip,
+  Typography,
+} from "antd";
 import moment from "moment";
 import { IDRFormat } from "../utils/FunctionUtils";
 import { ViewArchive, CreateAkad } from "../utils";
+import { useEffect, useState } from "react";
+import { IDapem } from "../IInterfaces";
+import { CreateOrUpdate, ModalDelete } from "../submissions";
+import { ERole, User } from "@prisma/client";
+import { useUser } from "../contexts/UserContext";
 const { RangePicker } = DatePicker;
 const { Paragraph } = Typography;
 
 export const UI = () => {
+  const [data, setData] = useState<IDapem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState<string>();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [rangeDate, setRangeDate] = useState<string[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const user = useUser();
+
+  const getData = async () => {
+    setLoading(true);
+    await fetch(
+      `/api/monitoring?page=${page}&pageSize=${pageSize}${
+        rangeDate && rangeDate.length === 2 ? "&rangeDate=" + rangeDate : ""
+      }${search ? "&name=" + search : ""}`
+    )
+      .then((res) => res.json())
+      .then((res) => {
+        setData(res.data.map((d: IDapem, i: any) => ({ ...d, key: i })));
+      })
+      .catch((err) => console.log(err));
+    const res = await fetch(`/api/users`);
+    const { data } = await res.json();
+    setUsers(data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    let timeout: any;
+    (async () => {
+      timeout = setTimeout(async () => {
+        await getData();
+      }, 200);
+    })();
+    return () => clearTimeout(timeout);
+  }, [search, page, pageSize, rangeDate]);
   return (
     <div className="p-1 bg-gray-50 border w-full">
-      <TableMonitoring />
+      <TableMonitoring
+        dataSource={data}
+        loading={loading}
+        page={page}
+        pageSize={pageSize}
+        setPage={setPage}
+        setPageSize={setPageSize}
+        setSearch={setSearch}
+        getData={getData}
+        setRangeDate={setRangeDate}
+        users={users}
+        role={user.role}
+      />
     </div>
   );
 };
 
-export const TableMonitoring = () => {
-  const columns: TableProps["columns"] = [
+export const TableMonitoring = ({
+  dataSource,
+  loading,
+  setPage,
+  page,
+  pageSize,
+  setPageSize,
+  setSearch,
+  getData,
+  setRangeDate,
+  users,
+  role,
+}: {
+  dataSource: IDapem[];
+  loading: boolean;
+  setPage: Function;
+  page: number;
+  pageSize: number;
+  setPageSize: Function;
+  setSearch: Function;
+  getData: Function;
+  setRangeDate: Function;
+  users: User[];
+  role: ERole;
+}) => {
+  const columns: TableProps<IDapem>["columns"] = [
     {
       title: "NO",
       dataIndex: "no",
       key: "no",
       width: 30,
-      className: "text-xs",
+      className: "text-xs text-center",
       onHeaderCell: () => {
         return {
           ["style"]: {
@@ -31,7 +115,7 @@ export const TableMonitoring = () => {
         };
       },
       render(value, record, index) {
-        return <div className="text-center">{index + 1}</div>;
+        return <>{(page - 1) * pageSize + (index + 1)}</>;
       },
     },
     {
@@ -48,6 +132,9 @@ export const TableMonitoring = () => {
           },
         };
       },
+      render(value, record, index) {
+        return <>{record.DetailDapem.DataDebitur.nama}</>;
+      },
     },
     {
       title: "NOMOR NIK",
@@ -62,6 +149,9 @@ export const TableMonitoring = () => {
             fontSize: 12,
           },
         };
+      },
+      render(value, record, index) {
+        return <>{record.DetailDapem.DataDebitur.nik}</>;
       },
     },
     {
@@ -78,6 +168,9 @@ export const TableMonitoring = () => {
           },
         };
       },
+      render(value, record, index) {
+        return <>{record.ProPem.name}</>;
+      },
     },
     {
       title: "JENIS PEMBIAYAAN",
@@ -93,11 +186,14 @@ export const TableMonitoring = () => {
           },
         };
       },
+      render(value, record, index) {
+        return <>{record.JePem.name}</>;
+      },
     },
     {
-      title: "PLAFOND",
-      dataIndex: "plafond",
-      key: "plafond",
+      title: "PLAFON",
+      dataIndex: "plafon",
+      key: "plafon",
       width: 130,
       className: "text-right text-xs",
       onHeaderCell: () => {
@@ -108,9 +204,9 @@ export const TableMonitoring = () => {
           },
         };
       },
-      sorter: (a: any, b: any) => a.plafond - b.plafond,
+      sorter: (a: IDapem, b: IDapem) => a.plafon - b.plafon,
       render(value, record, index) {
-        return <div>{IDRFormat(value)}</div>;
+        return <div>{IDRFormat(record.plafon)}</div>;
       },
     },
     {
@@ -127,6 +223,9 @@ export const TableMonitoring = () => {
           },
         };
       },
+      render(value, record, index) {
+        return <div>{record.tenor}</div>;
+      },
     },
     {
       title: "TGL PENGAJUAN",
@@ -141,6 +240,9 @@ export const TableMonitoring = () => {
             fontSize: 12,
           },
         };
+      },
+      render(value, record, index) {
+        return <div>{moment(record.tanggal).format("DD/MM/YYYY")}</div>;
       },
     },
     {
@@ -178,10 +280,13 @@ export const TableMonitoring = () => {
           render(value, record, index) {
             return (
               <div className="flex justify-center gap-1">
-                <CreateAkad title={record.namaPemohon.toUpperCase()} />
+                <CreateAkad currData={record} />
                 <ViewArchive
-                  src={record.berkasAkad}
-                  title={"Berkas Akad " + record.namaPemohon.toUpperCase()}
+                  src={record.DetailDapem.berkasAkad || ""}
+                  title={
+                    "Berkas Akad " +
+                    record.DetailDapem.DataDebitur.nama.toUpperCase()
+                  }
                 />
               </div>
             );
@@ -191,7 +296,7 @@ export const TableMonitoring = () => {
           title: "TANGGAL",
           dataIndex: "tanggalAkad",
           key: "tanggalAkad",
-          className: "text-xs",
+          className: "text-xs text-center",
           width: 100,
           onHeaderCell: () => {
             return {
@@ -202,6 +307,14 @@ export const TableMonitoring = () => {
                 fontSize: 12,
               },
             };
+          },
+          render(value, record, index) {
+            return (
+              <>
+                {record.DetailDapem.tanggalAkad &&
+                  moment(record.DetailDapem.tanggalAkad).format("DD/MM/YYYY")}
+              </>
+            );
           },
         },
       ],
@@ -238,13 +351,39 @@ export const TableMonitoring = () => {
               },
             };
           },
+          render(value, record, index) {
+            return (
+              <div className="flex justify-center text-xs text-gray-50 font-bold ">
+                {record.DetailDapem.status === "ANTRI" && (
+                  <div className="w-[90%] bg-orange-500 py-1 px-2 rounded-sm">
+                    {record.DetailDapem.status}
+                  </div>
+                )}
+                {record.DetailDapem.status === "PENDING" && (
+                  <div className="w-[90%] bg-yellow-500 py-1 px-2 rounded-sm">
+                    {record.DetailDapem.status}
+                  </div>
+                )}
+                {record.DetailDapem.status === "TOLAK" && (
+                  <div className="w-[90%] bg-red-500 py-1 px-2 rounded-sm">
+                    {record.DetailDapem.status}
+                  </div>
+                )}
+                {record.DetailDapem.status === "SETUJU" && (
+                  <div className="w-[90%] bg-green-500 py-1 px-2 rounded-sm">
+                    {record.DetailDapem.status}
+                  </div>
+                )}
+              </div>
+            );
+          },
         },
         {
           title: "KETERANGAN",
           dataIndex: "ketApproval",
           key: "ketApproval",
           className: "text-xs",
-          width: 150,
+          width: 200,
           onHeaderCell: () => {
             return {
               ["style"]: {
@@ -264,7 +403,7 @@ export const TableMonitoring = () => {
                 }}
                 className="text-xs"
               >
-                {record.ketApproval}
+                {record.DetailDapem.keterangan}
               </Paragraph>
             );
           },
@@ -273,7 +412,7 @@ export const TableMonitoring = () => {
           title: "TANGGAL",
           dataIndex: "tanggalApproval",
           key: "tanggalApproval",
-          className: "text-xs",
+          className: "text-xs text-center",
           width: 100,
           onHeaderCell: () => {
             return {
@@ -284,6 +423,14 @@ export const TableMonitoring = () => {
                 fontSize: 12,
               },
             };
+          },
+          render(value, record, index) {
+            return (
+              <>
+                {record.DetailDapem.tanggalStatus &&
+                  moment(record.DetailDapem.tanggalStatus).format("DD/MM/YYYY")}
+              </>
+            );
           },
         },
       ],
@@ -320,6 +467,37 @@ export const TableMonitoring = () => {
               },
             };
           },
+          render(value, record, index) {
+            return (
+              <div className="flex justify-center text-xs text-gray-50 font-bold ">
+                {record.DetailDapem.statusCair === "ANTRI" && (
+                  <div className="w-[90%] bg-orange-500 py-1 px-2 rounded-sm">
+                    {record.DetailDapem.statusCair}
+                  </div>
+                )}
+                {record.DetailDapem.statusCair === "PENDING" && (
+                  <div className="w-[90%] bg-yellow-500 py-1 px-2 rounded-sm">
+                    {record.DetailDapem.statusCair}
+                  </div>
+                )}
+                {record.DetailDapem.statusCair === "PROSES" && (
+                  <div className="w-[90%] bg-blue-500 py-1 px-2 rounded-sm">
+                    {record.DetailDapem.statusCair}
+                  </div>
+                )}
+                {record.DetailDapem.statusCair === "BATAL" && (
+                  <div className="w-[90%] bg-red-500 py-1 px-2 rounded-sm">
+                    {record.DetailDapem.statusCair}
+                  </div>
+                )}
+                {record.DetailDapem.statusCair === "SELESAI" && (
+                  <div className="w-[90%] bg-green-500 py-1 px-2 rounded-sm">
+                    {record.DetailDapem.statusCair}
+                  </div>
+                )}
+              </div>
+            );
+          },
         },
         {
           title: "TANGGAL ",
@@ -337,8 +515,54 @@ export const TableMonitoring = () => {
               },
             };
           },
+          render(value, record, index) {
+            return (
+              <>
+                {record.DetailDapem.tanggalCair &&
+                  moment(record.DetailDapem.tanggalCair).format("DD/MM/YYYY")}
+              </>
+            );
+          },
         },
       ],
+    },
+    {
+      title: "AKSI",
+      dataIndex: "aksi",
+      key: "aksi",
+      width: 100,
+      className: "text-center text-xs",
+      onHeaderCell: () => {
+        return {
+          ["style"]: {
+            textAlign: "center",
+            fontSize: 12,
+          },
+        };
+      },
+      render(value, record, index) {
+        return (
+          <div className="flex justify-center gap-2">
+            <Tooltip title="Update">
+              <CreateOrUpdate
+                action={
+                  role === "ADMIN"
+                    ? "Update"
+                    : role === "MARKETING"
+                    ? "View"
+                    : "Proses"
+                }
+                currData={record}
+                users={users}
+                getData={getData}
+              />
+            </Tooltip>
+            <Tooltip title="Hapus">
+              <ModalDelete data={record} getData={getData} />
+            </Tooltip>
+          </div>
+        );
+      },
     },
   ];
   return (
@@ -347,12 +571,17 @@ export const TableMonitoring = () => {
         columns={columns}
         size="small"
         bordered
-        dataSource={tempData}
+        loading={loading}
+        dataSource={dataSource}
         scroll={{ x: "max-content", y: 370 }}
         pagination={{
           size: "small",
           pageSizeOptions: [20, 50, 100, 500, 1000, 10000],
-          defaultPageSize: 50,
+          defaultPageSize: pageSize,
+          onChange(page, pageSize) {
+            setPage(page);
+            setPageSize(pageSize);
+          },
         }}
         title={() => (
           <div>
@@ -361,10 +590,19 @@ export const TableMonitoring = () => {
             </div>
             <div className="py-1 flex flex-col sm:flex-row gap-2 justify-between sm:items-end">
               <div className="flex-1 flex items-end gap-2 flex-wrap">
-                <RangePicker size="small" />
+                <RangePicker
+                  size="small"
+                  onChange={(_, dateString) =>
+                    setRangeDate([dateString[0], dateString[1]])
+                  }
+                />
               </div>
               <div className="flex-2">
-                <Input.Search placeholder="search" size="small" />
+                <Input.Search
+                  placeholder="search"
+                  size="small"
+                  onChange={(e) => setSearch(e.target.value)}
+                />
               </div>
             </div>
           </div>
@@ -373,10 +611,10 @@ export const TableMonitoring = () => {
           let plafond = 0;
 
           pageData.forEach((pd, i) => {
-            plafond += pd.plafond;
+            plafond += pd.plafon;
           });
           return (
-            <Table.Summary.Row className="bg-green-500 text-white text-center text-xs">
+            <Table.Summary.Row className="bg-blue-500 text-white text-center text-xs">
               <Table.Summary.Cell index={1} className="text-center">
                 Summary
                 <></>
@@ -397,6 +635,7 @@ export const TableMonitoring = () => {
               <Table.Summary.Cell index={13}></Table.Summary.Cell>
               <Table.Summary.Cell index={14}></Table.Summary.Cell>
               <Table.Summary.Cell index={15}></Table.Summary.Cell>
+              <Table.Summary.Cell index={16}></Table.Summary.Cell>
             </Table.Summary.Row>
           );
         }}
@@ -404,60 +643,3 @@ export const TableMonitoring = () => {
     </div>
   );
 };
-
-const tempData = [
-  {
-    key: 1,
-    namaPemohon: "Syihabudin Tsani",
-    nik: "3204251108010006",
-    produk: "Experience",
-    jenis: "Baru",
-    plafond: 5000000,
-    tenor: 10,
-    tanggalPengajuan: moment().format("DD/MM/YYYY"),
-    tanggalAkad: moment().format("DD/MM/YYYY"),
-    berkasAkad:
-      "https://sipboss.kpfi.co.id/akad/200021016170_RATIYEM_19032025.pdf",
-    statusApproval: "PENDING",
-    tanggalApproval: moment().format("DD/MM/YYYY"),
-    ketApproval: "Oke Lanjut Proses",
-    statusPencairan: "TRANSFER",
-    tanggalPencairan: moment().format("DD/MM/YYYY"),
-  },
-  {
-    key: 2,
-    namaPemohon: "Tsani Syihabudin",
-    nik: "3204251108010006",
-    produk: "Experience",
-    jenis: "Baru",
-    plafond: 5000000,
-    tenor: 10,
-    tanggalPengajuan: moment().format("DD/MM/YYYY"),
-    tanggalAkad: moment().format("DD/MM/YYYY"),
-    berkasAkad:
-      "https://sipboss.kpfi.co.id/akad/48003005600_SAPINI_21102024.pdf",
-    statusApproval: "PENDING",
-    tanggalApproval: moment().format("DD/MM/YYYY"),
-    ketApproval: "Oke Lanjut Proses",
-    statusPencairan: "TRANSFER",
-    tanggalPencairan: moment().format("DD/MM/YYYY"),
-  },
-  {
-    key: 3,
-    namaPemohon: "Video Tsani",
-    nik: "3204251108010006",
-    produk: "Experience",
-    jenis: "Baru",
-    plafond: 5000000,
-    tenor: 10,
-    tanggalPengajuan: moment().format("DD/MM/YYYY"),
-    tanggalAkad: moment().format("DD/MM/YYYY"),
-    berkasAkad:
-      "https://sipboss.kpfi.co.id/wawancara/WAWANCARA_1742285268176.mp4",
-    statusApproval: "PENDING",
-    tanggalApproval: moment().format("DD/MM/YYYY"),
-    ketApproval: "Oke Lanjut Proses",
-    statusPencairan: "TRANSFER",
-    tanggalPencairan: moment().format("DD/MM/YYYY"),
-  },
-];

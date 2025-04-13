@@ -1,11 +1,11 @@
-- Pengerjaan User Service Create
-- Pengerjaan API User & User Menu
-
-
-- Pengerjaan Simulasi
-- Pengerjaan Pengajuan
-- Pengerjaan Proses Pengajuan
-- Pengerjaan Proses Transfer
-- Pengerjaan Laporan
-- Pengerjaan Keterangan SOP
-- Pengerjaan Laporan Keuangan
+- Pengerjaan Pengajuan                    => PROSES
+  - Find Or Save Data Debitur & Keluarga  -> Check
+  - File Masih Belum Muncul               -> Check
+  - Update Pengajuan                      -> UnCheck
+  - Send To Monitoring                    -> UnCheck
+  - Delete Pengajuan                      -> UnCheck
+- Pengerjaan Proses Pengajuan             => PENDING
+- Pengerjaan Proses Transfer              => PENDING
+- Pengerjaan Laporan                      => PENDING
+- Pengerjaan Keterangan SOP               => PENDING
+- Pengerjaan Laporan Keuangan             => PENDING

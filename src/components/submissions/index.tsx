@@ -34,3 +34,21 @@ export const UISimulation = dynamic(
     loading: () => <LoadingOutlined />,
   }
 );
+export const ModalDelete = dynamic(
+  () =>
+    import("@/components/submissions/Submission").then((d) => d.ModalDelete),
+  {
+    ssr: false,
+    loading: () => <LoadingOutlined />,
+  }
+);
+export const ProsesPengajuan = dynamic(
+  () =>
+    import("@/components/submissions/Submission").then(
+      (d) => d.ProsesPengajuan
+    ),
+  {
+    ssr: false,
+    loading: () => <LoadingOutlined />,
+  }
+);

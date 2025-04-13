@@ -3,8 +3,10 @@
 import { FileOutlined, PrinterOutlined } from "@ant-design/icons";
 import { Button, Input, Modal, Select } from "antd";
 import { useState } from "react";
-import { UIAkad } from "./AkadUtils";
+import { UIAkad } from "./";
 import { ModalMessageProps } from "./ServerUtils";
+import moment from "moment";
+import { IDapem } from "../IInterfaces";
 
 export const InputUtils = ({
   type,
@@ -17,7 +19,7 @@ export const InputUtils = ({
   layout,
   disabled,
 }: {
-  type: "Input" | "Select" | "Area" | "Password" | "Date";
+  type: "Input" | "Select" | "Area" | "Password" | "Date" | "Number";
   label: string;
   value: any;
   onChange: Function;
@@ -73,9 +75,17 @@ export const InputUtils = ({
       )}
       {type === "Date" && (
         <Input
-          value={value}
+          value={moment(value).format("YYYY-MM-DD")}
           type="date"
-          onChange={(e) => onChange(new Date(e.target.value))}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled || false}
+        />
+      )}
+      {type === "Number" && (
+        <Input
+          value={value}
+          type="number"
+          onChange={(e) => onChange(parseFloat(e.target.value || "0"))}
           disabled={disabled || false}
         />
       )}
@@ -144,13 +154,110 @@ export const NotificationModal = ({
   );
 };
 
-export const CreateAkad = ({ title }: { title: string }) => {
+export const CreateAkad = ({ currData }: { currData: IDapem }) => {
   const [open, setOpen] = useState(false);
+  const [data, setData] = useState<IDapem>(currData);
+  const [ketAkad, setKetAkad] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleCetak = async () => {
+    setLoading(true);
+    await fetch("/api/dapem", {
+      method: "PUT",
+      headers: { "Content-type": "Application/json" },
+      body: JSON.stringify(data),
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        setOpen(true);
+        setKetAkad(false);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    setLoading(false);
+  };
+
   return (
     <div>
-      <Button size="small" type="primary" ghost onClick={() => setOpen(true)}>
+      <Button
+        size="small"
+        type="primary"
+        ghost
+        onClick={() => setKetAkad(true)}
+        disabled={currData.DetailDapem.status === "SETUJU" ? false : true}
+      >
         <PrinterOutlined />
       </Button>
+      <Modal
+        open={ketAkad}
+        onCancel={() => setKetAkad(false)}
+        onClose={() => setKetAkad(false)}
+        footer={[
+          <Button
+            key={"cetak"}
+            type="primary"
+            loading={loading}
+            size="small"
+            disabled={
+              !data.DetailDapem.noAkad || !data.DetailDapem.tanggalAkad
+                ? true
+                : loading
+            }
+            onClick={() => {
+              setKetAkad(false);
+              handleCetak();
+            }}
+          >
+            Cetak
+          </Button>,
+        ]}
+        title={
+          "CETAK AKAD " + currData.DetailDapem.DataDebitur.nama.toUpperCase()
+        }
+      >
+        <div className="my-4 flex flex-col gap-2">
+          <InputUtils
+            label="Nomor NIK"
+            value={currData.DetailDapem.DataDebitur.nik}
+            disabled
+            type="Input"
+            onChange={() => {}}
+          />
+          <InputUtils
+            label="Nama Pemohon"
+            value={currData.DetailDapem.DataDebitur.nama}
+            disabled
+            type="Input"
+            onChange={() => {}}
+          />
+          <InputUtils
+            label="Nomor Akad"
+            value={
+              data.DetailDapem.noAkad ||
+              "{NO}/KOPJASFAS/W/I/" + moment().format("MMYYYY")
+            }
+            type="Input"
+            onChange={(e: string) =>
+              setData((prev) => ({
+                ...prev,
+                DetailDapem: { ...prev.DetailDapem, noAkad: e },
+              }))
+            }
+          />
+          <InputUtils
+            label="Tanggal Akad"
+            value={data.DetailDapem.tanggalAkad}
+            type="Date"
+            onChange={(e: string) =>
+              setData((prev) => ({
+                ...prev,
+                DetailDapem: { ...prev.DetailDapem, tanggalAkad: new Date(e) },
+              }))
+            }
+          />
+        </div>
+      </Modal>
       <Modal
         open={open}
         onCancel={() => setOpen(false)}
@@ -159,10 +266,10 @@ export const CreateAkad = ({ title }: { title: string }) => {
         width={"100%"}
         footer={[]}
         className="top-5"
-        title={"CETAK AKAD " + title}
+        title={"AKAD " + currData.DetailDapem.DataDebitur.nama.toUpperCase()}
       >
         <div className="h-[80vh]">
-          <UIAkad title={title} />
+          <UIAkad currData={data} />
         </div>
       </Modal>
     </div>

@@ -22,6 +22,8 @@ enum Estatus {
   SAVED
   ANTRI
   PENDING
+  TOLAK
+  SETUJU
   PROSES
   BATAL
   SELESAI
@@ -123,7 +125,7 @@ model Dapem {
   updatedAt DateTime @default(now())
 
   ProPem        ProPem       @relation(fields: [proPemId], references: [id])
-  Jepem         JePem        @relation(fields: [jePemId], references: [id])
+  JePem         JePem        @relation(fields: [jePemId], references: [id])
   User          User         @relation(fields: [userId], references: [id])
   proPemId      String
   jePemId       String
@@ -134,51 +136,62 @@ model Dapem {
 
 model DetailDapem {
   id                String    @id @default(uuid())
-  berkasPengajuan   String?
-  videoWawancara    String?
+  berkasPengajuan   String?   @db.LongText
+  videoWawancara    String?   @db.LongText
   status            Estatus   @default(SAVED)
-  tanggalStatus     DateTime
-  keterangan        String    @db.Text
+  tanggalStatus     DateTime?
+  keterangan        String?   @db.Text
   statusCair        Estatus   @default(ANTRI)
+  statusLunas       Boolean   @default(false)
   tanggalCair       DateTime?
   noAkad            String?   @unique
   tanggalAkad       DateTime?
-  berkasAkad        String?
-  buktiPencairan    String?
+  berkasAkad        String?   @db.LongText
+  buktiPencairan    String?   @db.LongText
   nominalPencairan  Int?
-  buktiPencairan1   String?
+  buktiPencairan1   String?   @db.LongText
   nominalPencairan1 Int?
-  buktiPencairan2   String?
+  buktiPencairan2   String?   @db.LongText
   nominalPencairan2 Int?
   fee               Int?
-  buktiFee          String?
+  buktiFee          String?   @db.LongText
   tujuanPenggunaan  String?
+  pemeriksa         String?
 
-  User          User        @relation(fields: [userId], references: [id])
-  userId        String
-  Dapem         Dapem[]
-  DataDebitur   DataDebitur @relation(fields: [dataDebiturId], references: [id])
-  dataDebiturId String
+  User           User             @relation(fields: [userId], references: [id])
+  userId         String
+  Dapem          Dapem[]
+  DataDebitur    DataDebitur      @relation(fields: [dataDebiturId], references: [id])
+  dataDebiturId  String
+  JadwalAngsuran JadwalAngsuran[]
 }
 
 model DataDebitur {
-  id           String         @id @default(uuid())
-  nama         String
-  nik          String
-  noKK         String
-  tanggalLahir DateTime
-  alamat       String
-  kelurahan    String
-  kecamatan    String
-  kota         String
-  provinsi     String
-  kodePos      String
-  geoLokasi    String
-  noTelepon    String
-  gender       EGender
-  statusKawin  EStatusKawin
-  DetailDapem  DetailDapem[]
-  DataKeluarga DataKeluarga[]
+  id                   String         @id @default(uuid())
+  nama                 String
+  nik                  String
+  noKK                 String
+  tanggalLahir         DateTime
+  alamat               String
+  kelurahan            String
+  kecamatan            String
+  kota                 String
+  provinsi             String
+  kodePos              String
+  geoLokasi            String
+  noTelepon            String
+  gender               EGender
+  pekerjaan            String
+  alamatPekerjaan      String         @db.Text
+  statusKawin          EStatusKawin
+  namaPasangan         String?
+  nikPasangan          String?
+  tanggalLahirPasangan DateTime?
+  alamatPasangan       String?
+  noTeleponPasangan    String?
+  pekerjaanPasangan    String?
+  DetailDapem          DetailDapem[]
+  DataKeluarga         DataKeluarga[]
 }
 
 model DataKeluarga {
@@ -190,4 +203,16 @@ model DataKeluarga {
   gender        EGender
   DataDebitur   DataDebitur @relation(fields: [dataDebiturId], references: [id])
   dataDebiturId String
+}
+
+model JadwalAngsuran {
+  id           String   @id @default(uuid())
+  jadwalBayar  DateTime
+  pokok        Int
+  margin       Int
+  tanggalBayar DateTime
+  angsuranKe   Int
+
+  DetailDapem   DetailDapem @relation(fields: [detailDapemId], references: [id])
+  detailDapemId String
 }

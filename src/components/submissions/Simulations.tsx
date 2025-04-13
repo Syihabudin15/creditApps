@@ -3,7 +3,7 @@ import { Button, Input, Modal, Select } from "antd";
 import moment from "moment";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { IJePem, IProPem, ISimulation, IUser } from "../IInterfaces";
+import { IDapem, IJePem, IProPem, ISimulation, IUser } from "../IInterfaces";
 import {
   AngsuranFlat,
   GetStartPaidDate,
@@ -12,7 +12,15 @@ import {
 import { useUser } from "../contexts/UserContext";
 import { ProPem } from "@prisma/client";
 
-export const UI = () => {
+export const UI = ({
+  currdata,
+  action,
+  setCurrData,
+}: {
+  currdata?: IDapem;
+  action?: "Create" | "View" | "Update" | "Proses";
+  setCurrData?: Function;
+}) => {
   const [error, setError] = useState<{ status: boolean; msg: string }>({
     status: false,
     msg: "",
@@ -135,16 +143,101 @@ export const UI = () => {
       setProducts([...daily, ...weekly, ...monthly]);
       setJepems(dataJepem.data);
     })();
+    if (currdata) {
+      setData({
+        id: currdata.id,
+        tanggal: currdata.tanggal,
+        nik: "",
+        nama: "",
+        alamat: "",
+        gajiBersih: currdata.gajiBersih,
+        tenor: currdata.tenor,
+        plafon: currdata.plafon,
+        angsuran: currdata.angsuran,
+        byAdmin: currdata.byAdmin,
+        byTabungan: currdata.byTabungan,
+        byMaterai: currdata.byMaterai,
+        byTatalaksana: currdata.byTatalaksana,
+        blokir: currdata.blokir,
+        penalty: currdata.penalty,
+        pelunasan: currdata.pelunasan,
+        margin: currdata.margin,
+        createdAt: currdata.createdAt,
+        updatedAt: new Date(),
+        isActive: currdata.isActive,
+        proPemId: currdata.proPemId,
+        jePemId: currdata.jePemId,
+        userId: currdata.userId,
+        ProPem: {
+          id: currdata.proPemId,
+          name: currdata.ProPem.name,
+          unit: currdata.ProPem.unit,
+          maxTenor: currdata.ProPem.maxTenor,
+          maxPlafon: currdata.ProPem.maxPlafon,
+          byAdmin: currdata.ProPem.byAdmin,
+          byTabungan: currdata.ProPem.byTabungan,
+          byMaterai: currdata.ProPem.byMaterai,
+          byTatalaksana: currdata.ProPem.byTatalaksana,
+          margin: currdata.ProPem.margin,
+          createdAt: currdata.ProPem.createdAt,
+          updatedAt: currdata.ProPem.updatedAt,
+          isActive: currdata.ProPem.isActive,
+        },
+        JePem: {
+          id: currdata.JePem.id,
+          name: currdata.JePem.name,
+          penalty: currdata.JePem.penalty,
+          createdAt: currdata.JePem.createdAt,
+          updatedAt: currdata.JePem.updatedAt,
+          isActive: currdata.JePem.isActive,
+        },
+        detailDapemId: currdata.detailDapemId,
+      });
+    }
   }, []);
 
+  useEffect(() => {
+    if (setCurrData) {
+      setCurrData((prev: any) => ({
+        ...prev,
+        id: data.id,
+        tanggal: data.tanggal,
+        gajiBersih: data.gajiBersih,
+        tenor: data.tenor,
+        plafon: data.plafon,
+        angsuran: data.angsuran,
+        byAdmin: data.byAdmin,
+        byTabungan: data.byTabungan,
+        byMaterai: data.byMaterai,
+        byTatalaksana: data.byTatalaksana,
+        blokir: data.blokir,
+        penalty: data.penalty,
+        pelunasan: data.pelunasan,
+        margin: data.margin,
+
+        isActive: data.isActive,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+        userId: currdata?.userId || data.userId,
+        proPemId: data.proPemId,
+        jePemId: data.jePemId,
+        detailDapemId: currdata?.detailDapemId || "",
+      }));
+    }
+  }, [data]);
+
   return (
-    <div className="flex flex-col sm:flex-row justify-center items-center sm:items-start p-1 gap-2">
-      <div className="flex-1">
+    <div
+      className={`flex ${
+        action ? "flex-col" : "flex-col sm:flex-row"
+      }  justify-center items-center sm:items-start p-1 gap-2`}
+    >
+      <div className={`${action ? "w-full" : "flex-1"}`}>
         <div className="mb-3">
           <p>Tanggal Simulasi</p>
           <Input disabled value={moment(data.tanggal).format("DD/MM/YYYY")} />
         </div>
-        <div className="flex gap-2 mb-3">
+        <div className={`${action ? "hidden" : "flex"} gap-2 mb-3`}>
           <div className="flex-1">
             <p>Nomor NIK</p>
             <Input
@@ -168,17 +261,15 @@ export const UI = () => {
             />
           </div>
         </div>
-        <div className="flex gap-2 mb-3 ">
-          <div className="flex-1">
+        <div className={`flex gap-2 mb-3`}>
+          <div className={`${action ? "hidden" : "flex-1"}`}>
             <p>Alamat</p>
             <Input.TextArea
               required
               onChange={(e) =>
                 setData((prev) => ({ ...prev, alamat: e.target.value }))
               }
-            >
-              p
-            </Input.TextArea>
+            ></Input.TextArea>
           </div>
           <div className="flex-1">
             <p>Gaji Bersih</p>
@@ -194,6 +285,13 @@ export const UI = () => {
                   ),
                 }))
               }
+              disabled={
+                action
+                  ? action === "View" || action === "Proses"
+                    ? true
+                    : false
+                  : false
+              }
             />
           </div>
         </div>
@@ -203,6 +301,7 @@ export const UI = () => {
             <Select
               className="w-full"
               placeholder="Select Product"
+              value={data.ProPem.id}
               options={
                 productsOption &&
                 productsOption.map((p) => ({
@@ -224,6 +323,13 @@ export const UI = () => {
                 }
                 alert("Product not found");
               }}
+              disabled={
+                action
+                  ? action === "View" || action === "Proses"
+                    ? true
+                    : false
+                  : false
+              }
             />
           </div>
           <div className="flex-1">
@@ -232,6 +338,7 @@ export const UI = () => {
               className="w-full"
               options={jepems.map((j) => ({ label: j.name, value: j.id }))}
               placeholder="Select Jenis"
+              value={data.JePem.id}
               onChange={(e) => {
                 const filter = jepems.filter((j) => j.id === e);
                 if (filter.length !== 0) {
@@ -243,6 +350,13 @@ export const UI = () => {
                 }
                 alert("Jenis Pembiayaan not found");
               }}
+              disabled={
+                action
+                  ? action === "View" || action === "Proses"
+                    ? true
+                    : false
+                  : false
+              }
             />
           </div>
         </div>
@@ -279,6 +393,13 @@ export const UI = () => {
                   tenor: value,
                 }));
               }}
+              disabled={
+                action
+                  ? action === "View" || action === "Proses"
+                    ? true
+                    : false
+                  : false
+              }
             />
           </div>
         </div>
@@ -313,6 +434,13 @@ export const UI = () => {
                   plafon: value,
                 }));
               }}
+              disabled={
+                action
+                  ? action === "View" || action === "Proses"
+                    ? true
+                    : false
+                  : false
+              }
             />
           </div>
         </div>
@@ -337,7 +465,7 @@ export const UI = () => {
           </div>
         </div>
       </div>
-      <div className="flex-1 bg-gray-50 p-2">
+      <div className={`${action ? "w-full" : "flex-1 bg-gray-50 p-2"}`}>
         <div className="bg-red-500 text-gray-50 p-2 font-bold rounded text-sm text-center my-2">
           <p>Keterangan Biaya</p>
         </div>
@@ -368,6 +496,13 @@ export const UI = () => {
                     },
                   }));
                 }}
+                disabled={
+                  action
+                    ? action === "View" || action === "Proses"
+                      ? true
+                      : false
+                    : false
+                }
               />
             </div>
             <Input
@@ -386,6 +521,13 @@ export const UI = () => {
                   },
                 }));
               }}
+              disabled={
+                action
+                  ? action === "View" || action === "Proses"
+                    ? true
+                    : false
+                  : false
+              }
             />
           </div>
         </div>
@@ -416,6 +558,13 @@ export const UI = () => {
                     },
                   }));
                 }}
+                disabled={
+                  action
+                    ? action === "View" || action === "Proses"
+                      ? true
+                      : false
+                    : false
+                }
               />
             </div>
             <Input
@@ -434,6 +583,13 @@ export const UI = () => {
                   },
                 }));
               }}
+              disabled={
+                action
+                  ? action === "View" || action === "Proses"
+                    ? true
+                    : false
+                  : false
+              }
             />
           </div>
         </div>
@@ -465,6 +621,13 @@ export const UI = () => {
                       },
                     }));
                   }}
+                  disabled={
+                    action
+                      ? action === "View" || action === "Proses"
+                        ? true
+                        : false
+                      : false
+                  }
                 />
               </div>
               <Input
@@ -483,6 +646,13 @@ export const UI = () => {
                     },
                   }));
                 }}
+                disabled={
+                  action
+                    ? action === "View" || action === "Proses"
+                      ? true
+                      : false
+                    : false
+                }
               />
             </div>
           </div>
@@ -515,6 +685,13 @@ export const UI = () => {
                       },
                     }));
                   }}
+                  disabled={
+                    action
+                      ? action === "View" || action === "Proses"
+                        ? true
+                        : false
+                      : false
+                  }
                 />
               </div>
               <Input
@@ -533,6 +710,13 @@ export const UI = () => {
                     },
                   }));
                 }}
+                disabled={
+                  action
+                    ? action === "View" || action === "Proses"
+                      ? true
+                      : false
+                    : false
+                }
               />
             </div>
           </div>
@@ -560,6 +744,13 @@ export const UI = () => {
                     blokir: parseInt(e.target.value || "0"),
                   }));
                 }}
+                disabled={
+                  action
+                    ? action === "View" || action === "Proses"
+                      ? true
+                      : false
+                    : false
+                }
               />
             </div>
             <Input
@@ -622,6 +813,13 @@ export const UI = () => {
                       },
                     }));
                   }}
+                  disabled={
+                    action
+                      ? action === "View" || action === "Proses"
+                        ? true
+                        : false
+                      : false
+                  }
                 />
               </div>
               <Input
@@ -640,6 +838,13 @@ export const UI = () => {
                     },
                   }));
                 }}
+                disabled={
+                  action
+                    ? action === "View" || action === "Proses"
+                      ? true
+                      : false
+                    : false
+                }
               />
             </div>
           </div>
@@ -662,6 +867,13 @@ export const UI = () => {
                     pelunasan: value,
                   }));
                 }}
+                disabled={
+                  action
+                    ? action === "View" || action === "Proses"
+                      ? true
+                      : false
+                    : false
+                }
               />
             </div>
           </div>
@@ -735,7 +947,7 @@ export const UI = () => {
         <div className="text-xs text-red-500 italic my-2">
           {error.status && error.msg}
         </div>
-        <div className="flex gap-2 justify-end mt-3">
+        <div className={`${action ? "hidden" : "flex gap-2 justify-end mt-3"}`}>
           <Button
             danger
             onClick={() => handleReset({ setData, setTotalPot, setError })}

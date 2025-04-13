@@ -31,3 +31,10 @@ export const CreateAkad = dynamic(
     loading: () => <LoadingOutlined />,
   }
 );
+export const UIAkad = dynamic(
+  () => import("@/components/utils/AkadUtils").then((d) => d.UIAkad),
+  {
+    ssr: false,
+    loading: () => <LoadingOutlined />,
+  }
+);

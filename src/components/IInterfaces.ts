@@ -68,3 +68,9 @@ export interface IDapem extends Dapem {
   DetailDapem: IDetailDapem;
   User: User;
 }
+
+export interface NotificationItems {
+  antrian: number;
+  akad: number;
+  cair: number;
+}
